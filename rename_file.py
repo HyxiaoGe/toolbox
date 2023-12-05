@@ -1,4 +1,6 @@
 import os
+
+
 def rename_files(folder_path, new_name):
     # 初始化一个计数器，从1开始
     counter = 1
@@ -16,6 +18,7 @@ def rename_files(folder_path, new_name):
             print(f"Rename {filename} to {new_filename}")
             # 计数器加1
             counter += 1
+
 
 if __name__ == '__main__':
     # 文件夹路径
