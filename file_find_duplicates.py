@@ -36,7 +36,7 @@ def find_duplicates(directory):
 
 if __name__ == '__main__':
     # 指定包含视频文件的目录
-    directory = 'E:\\test'
+    directory = 'E:\\home\\123\\video'
     duplicates = find_duplicates(directory)
 
     if len(duplicates) > 0:
