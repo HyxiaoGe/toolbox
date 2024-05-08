@@ -6,8 +6,6 @@ def clean_filenames(directory_path):
     # 定义要去除的模式
     patterns = [
         r' - Copy',  # 去除“ - Copy”
-        r'-慕课网就业班',  # 去除“ - Copy”
-        r'更多IT资源加微信535950311',  # 去除“ - Copy”
         r'\s+(?=\.\w+$)',  # 去除文件扩展名前的空格
         r'\d{2}_\d{2}_ev',  # 去除类似“01_01_ev”的格式
         r' \d{4}-\d{2}-\d{2}'  # 去除类似“-2020-07-07”的日期格式
@@ -30,5 +28,5 @@ def clean_filenames(directory_path):
 
 
 if __name__ == '__main__':
-    directory_path = r'E:\BaiduNetdiskDownload\Netty'
+    directory_path = r'E:\course\Netty'
     clean_filenames(directory_path)
