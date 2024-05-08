@@ -1,5 +1,6 @@
 import subprocess
 from datetime import timedelta
+from pathlib import Path
 
 
 def get_video_duration(file_path):
@@ -21,16 +22,26 @@ def get_video_duration(file_path):
         raise ValueError("Could not convert duration to float: " + str(e))
 
 
+def sum_durations_in_directory(directory_path):
+    total_duration = 0
+    path = Path(directory_path)
+    for file in path.glob('*.mp4'):
+        duration = get_video_duration(file)
+        total_duration += duration
+        print(f"Processed {file}: {duration} seconds")
+    return total_duration
+
+
 def format_duration(duration):
     # 将秒数转换为时分秒格式(去除毫秒)
     return str(timedelta(seconds=duration)).split(".")[0]
 
 
 if __name__ == '__main__':
-    file_path = 'E:\\test\\TypeScript.mp4'
+    directory_path = 'E:\\test'
     try:
-        duration = get_video_duration(file_path)
+        duration = sum_durations_in_directory(directory_path)
         duration = format_duration(duration)
-        print(f"Duration of {file_path} is {duration} seconds")
+        print(f"Duration of {directory_path} is {duration} seconds")
     except Exception as e:
         print(f"An error occurred: {e}")
