@@ -14,6 +14,9 @@
 ### file_rename.py
 `file_rename.py` 提供了一个批量重命名目录中文件的工具，按照指定的模式或规则进行，如添加前缀或后缀，或根据文件的创建日期和时间重命名文件。
 
+### software_quickstart.py
+`software_quickstart.py` 用于快速启动指定的软件。它可以帮助用户快速启动常用的软件，而无需手动查找并点击软件图标。
+
 ### traditional_to_simplified.py
 `traditional_to_simplified.py` 用于将文本文件中的繁体中文转换为简体中文。它利用 `opencc` 工具将文本文件中的繁体中文转换为简体中文。
 
