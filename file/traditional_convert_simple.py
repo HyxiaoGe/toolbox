@@ -1,5 +1,5 @@
-from opencc import OpenCC
 import os
+from opencc import OpenCC
 
 
 def convert_srt_to_simple_chinese(input_file, output_file):
