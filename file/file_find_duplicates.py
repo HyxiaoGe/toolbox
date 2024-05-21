@@ -18,29 +18,32 @@ def find_duplicates(directory):
     hashes = {}
     duplicates = []
 
+    files = [file for file in os.listdir(directory) if os.path.isfile(os.path.join(directory, file))]
+    total_files = len(files)
     # 遍历目录中的所有文件
-    for filename in os.listdir(directory):
-        if os.path.isfile(os.path.join(directory, filename)):
-            file_path = os.path.join(directory, filename)
-            # 计算文件的哈希值
-            file_hash = hash_fine(file_path)
+    for count, filename in enumerate(files, 1):
+        print(f"{count}/{total_files} {filename}")
+        file_path = os.path.join(directory, filename)
+        # 计算文件的哈希值
+        file_hash = hash_fine(file_path)
 
-            # 如果哈希值已经存在，则说明文件重复
-            if file_hash in hashes:
-                duplicates.append((file_path, hashes[file_hash]))
-            else:
-                hashes[file_hash] = filename
+        # 如果哈希值已经存在，则说明文件重复
+        if file_hash in hashes:
+            duplicates.append((file_path, hashes[file_hash]))
+        else:
+            hashes[file_hash] = filename
 
     return duplicates
 
 
 if __name__ == '__main__':
     # 指定包含视频文件的目录
-    directory = 'E:\\home\\123\\video'
+    directory = r'E:\download'
     duplicates = find_duplicates(directory)
 
     if len(duplicates) > 0:
         # 打印所有重复文件的路径
+        print("Duplicate files found.\n")
         for file1, file2 in duplicates:
             print(f"Duplicate files: {file1} {file2}")
     else:
