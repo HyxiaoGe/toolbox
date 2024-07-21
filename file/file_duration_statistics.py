@@ -38,7 +38,7 @@ def format_duration(duration):
 
 
 if __name__ == '__main__':
-    directory_path = 'E:\\test'
+    directory_path = r'E:\BaiduNetdiskDownload'
     try:
         duration = sum_durations_in_directory(directory_path)
         duration = format_duration(duration)

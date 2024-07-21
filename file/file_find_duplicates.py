@@ -1,50 +1,67 @@
-import hashlib
 import os
+import shutil
+import hashlib
+from PIL import Image
+import imagehash
+from collections import defaultdict
 
 
-def hash_fine(filepath):
-    """计算文件的SHA256哈希值"""
+def get_file_hash(filepath):
+    """根据文件类型计算不同的哈希值"""
+    ext = filepath.split('.')[-1].lower()
+    if ext in ['png', 'jpg', 'jpeg']:
+        return hash_image(filepath)
+    elif ext in ['mp4', 'avi', 'mkv']:
+        return hash_video(filepath)
+    else:
+        return None
+
+
+def hash_image(filepath):
+    """计算图片的感知哈希值"""
+    with Image.open(filepath) as img:
+        img = img.convert("L").resize((8, 8), Image.Resampling.LANCZOS)
+        hash_value = imagehash.average_hash(img)
+    return str(hash_value)
+
+
+def hash_video(filepath):
+    """计算视频文件的SHA256哈希值"""
     hasher = hashlib.sha256()
     with open(filepath, 'rb') as f:
-        buf = f.read(65536)  # 读取大文件的较大快以减少内存消耗
+        buf = f.read(65536)
         while len(buf) > 0:
             hasher.update(buf)
             buf = f.read(65536)
     return hasher.hexdigest()
 
 
-def find_duplicates(directory):
-    """在给定的目录中查找重复文件"""
-    hashes = {}
-    duplicates = []
+def find_duplicates(folders):
+    """在一个或多个文件夹中查找重复文件"""
+    hashes = defaultdict(list)
+    for folder in folders:
+        for root, _, files in os.walk(folder):
+            for file in files:
+                path = os.path.join(root, file)
+                file_hash = get_file_hash(path)
+                if file_hash:
+                    hashes[file_hash].append(path)
 
-    files = [file for file in os.listdir(directory) if os.path.isfile(os.path.join(directory, file))]
-    total_files = len(files)
-    # 遍历目录中的所有文件
-    for count, filename in enumerate(files, 1):
-        print(f"{count}/{total_files} {filename}")
-        file_path = os.path.join(directory, filename)
-        # 计算文件的哈希值
-        file_hash = hash_fine(file_path)
+    duplicates_folder = os.path.join(folders[0], 'duplicates')
+    if not os.path.exists(duplicates_folder):
+        os.makedirs(duplicates_folder)
 
-        # 如果哈希值已经存在，则说明文件重复
-        if file_hash in hashes:
-            duplicates.append((file_path, hashes[file_hash]))
-        else:
-            hashes[file_hash] = filename
-
-    return duplicates
+    # 分组移动重复文件
+    for file_hash, paths in hashes.items():
+        if len(paths) > 1:
+            group_folder = os.path.join(duplicates_folder, file_hash[:10])
+            os.makedirs(group_folder, exist_ok=True)
+            for path in paths:
+                shutil.move(path, os.path.join(group_folder, os.path.basename(path)))
 
 
 if __name__ == '__main__':
-    # 指定包含视频文件的目录
-    directory = r'E:\download'
-    duplicates = find_duplicates(directory)
-
-    if len(duplicates) > 0:
-        # 打印所有重复文件的路径
-        print("Duplicate files found.\n")
-        for file1, file2 in duplicates:
-            print(f"Duplicate files: {file1} {file2}")
-    else:
-        print("No duplicate files found.")
+    # 可以指定单个或多个文件夹
+    folders = ['E:\\test']
+    find_duplicates(folders)
+    print("Duplicate processing complete.")
