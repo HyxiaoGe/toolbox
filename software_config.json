@@ -1,0 +1,18 @@
+{
+    "software": [
+        {
+            "name": "\u8bb0\u4e8b\u672c (\u793a\u4f8b)",
+            "path": "notepad.exe",
+            "args": []
+        },
+        {
+            "name": "\u8ba1\u7b97\u5668 (\u793a\u4f8b)",
+            "path": "calc.exe"
+        },
+        {
+            "name": "\u6253\u5f00\u6d4b\u8bd5\u6587\u6863 (\u793a\u4f8b)",
+            "action": "open_default",
+            "target_file": "E:\\PythonProject\\toolbox\\gui_app\\..\\dummy_document_for_quickstart.txt"
+        }
+    ]
+}
