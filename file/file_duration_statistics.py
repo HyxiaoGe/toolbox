@@ -1,9 +1,9 @@
 import subprocess
 from datetime import timedelta
 from pathlib import Path
-import os # Added for os.walk and path operations
+import os # 为 os.walk 和路径操作添加
 
-DEFAULT_FFPROBE_PATH = r'D:\ffmpeg-7.0-full_build\bin\ffprobe.exe' # Keep a default for __main__
+# DEFAULT_FFPROBE_PATH = r'D:\\ffmpeg-7.0-full_build\\bin\\ffprobe.exe' # <<< 已移除
 
 def get_video_duration(file_path, ffprobe_path):
     if not os.path.isfile(ffprobe_path):
@@ -32,8 +32,8 @@ def format_duration_to_hhmmss(seconds):
 
 def sum_mp4_durations_in_directory(directory_path, ffprobe_path):
     """
-    Calculates the total duration of all .mp4 files in a directory and its subdirectories.
-    Returns: (total_duration_seconds, processed_files_count, log_messages_list, error_list)
+    计算目录及其子目录中所有 .mp4 文件的总时长。
+    返回: (总时长_秒, 已处理文件数, 日志消息列表, 错误列表)
     """
     total_duration = 0.0
     processed_files_count = 0
@@ -68,13 +68,15 @@ def sum_mp4_durations_in_directory(directory_path, ffprobe_path):
 
 
 if __name__ == '__main__':
-    # Example usage for standalone testing
-    test_directory = r'E:\BaiduNetdiskDownload' # Replace with your test directory
-    # For testing, you can override ffprobe_path if DEFAULT_FFPROBE_PATH is not correct
-    # ffprobe_executable_path = input(f"Enter ffprobe.exe path or press Enter for default ({DEFAULT_FFPROBE_PATH}): ")
-    # if not ffprobe_executable_path:
-    #     ffprobe_executable_path = DEFAULT_FFPROBE_PATH
-    ffprobe_executable_path = DEFAULT_FFPROBE_PATH # Using default for automated run
+    # 独立测试的示例用法
+    test_directory = r'E:\\BaiduNetdiskDownload' # 替换为你的测试目录
+    
+    # <<< 已修改: ffprobe_executable_path 现在必须为独立测试明确设置
+    # 例如，你可以取消注释并使用下面的输入，或为测试硬编码一个路径。
+    # ffprobe_executable_path = input(f"输入 ffprobe.exe 路径: ")
+    # 对于此非交互式更改，我们将把它设置一个占位符，或者期望在运行时手动设置它。
+    ffprobe_executable_path = "path/to/your/ffprobe.exe" # !!! 用户需要修改这里才能独立运行测试 !!!
+    print(f"重要提示: 若要独立运行此脚本测试, 请编辑此文件并设置正确的 'ffprobe_executable_path' 变量。")
 
     print(f"Calculating total MP4 duration in: {test_directory}")
     print(f"Using ffprobe: {ffprobe_executable_path}")
