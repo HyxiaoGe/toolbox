@@ -7,7 +7,6 @@ import sys
 import threading
 import datetime
 
-# 调整 sys.path 以包含项目根目录，以便导入同级模块
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -17,10 +16,8 @@ from gui_app.config_manager import get_setting, set_setting
 try:
     from file import folder_size_report
 except ImportError:
-    # 此回退适用于直接执行此文件（例如，用于测试）。
-    # 在主应用程序中，上面的路径调整应该足够了。
-    if os.path.basename(project_root) == 'toolbox': # 或你的项目根文件夹名称
-        sys.path.insert(0, os.path.join(project_root, "..")) # 如果 project_root 是 'toolbox'，则再向上一级
+    if os.path.basename(project_root) == 'toolbox':
+        sys.path.insert(0, os.path.join(project_root, ".."))
         from file import folder_size_report
     else:
         raise
@@ -33,7 +30,7 @@ class ToolPluginFrame(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(3, weight=1) # 日志区域将扩展
+        self.grid_rowconfigure(3, weight=1)
 
         # Treeview 排序状态变量
         self._tree_sort_column = None
@@ -69,9 +66,7 @@ class ToolPluginFrame(customtkinter.CTkFrame):
         self.total_size_label = customtkinter.CTkLabel(self.controls_frame, textvariable=self.total_size_label_var)
         self.total_size_label.pack(pady=(0,5))
 
-        # <<< 已添加：用于分析的进度条
         self.progress_bar = customtkinter.CTkProgressBar(self.controls_frame, orientation='horizontal', mode='indeterminate')
-        # 进度条将根据需要进行 .pack() 和 .pack_forget()，因此此处不进行初始 pack。
 
         # --- 结果 Treeview ---
         self.tree_frame = customtkinter.CTkFrame(self)
@@ -122,13 +117,16 @@ class ToolPluginFrame(customtkinter.CTkFrame):
     def _apply_theme_to_scrolledtext(self, st_widget):
         bg_color = self._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkFrame"]["fg_color"])
         text_color = self._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkLabel"]["text_color"])
-        # 配置 ScrolledText 组件本身。
-        # 它会将这些配置委托给其内部的 Text 组件。
+        
         st_widget.config(
             background=bg_color,
             foreground=text_color,
-            relief="flat",      # 直接应用 relief 样式
-            borderwidth=0     # 直接应用 borderwidth
+            insertbackground=text_color, 
+            font=("Segoe UI", customtkinter.ThemeManager.theme["CTkFont"]["size"]) if "CTkFont" in customtkinter.ThemeManager.theme else ("Arial", 12),
+            relief=tk.FLAT, 
+            borderwidth=0,
+            padx=5, pady=5,
+            state=tk.DISABLED
         )
         # 先前导致错误的那行 st_widget.text.config(...) 已被移除。
 
@@ -182,7 +180,6 @@ class ToolPluginFrame(customtkinter.CTkFrame):
         folder_selected = filedialog.askdirectory(initialdir=initial_dir)
         if folder_selected:
             self.folder_path_var.set(folder_selected)
-            # 清除以前的日志并记录新的文件夹选择
             self.log_message(f"选择文件夹: {folder_selected}", clear_first=True)
 
     def log_message(self, message, is_error=False, clear_first=False):
@@ -190,12 +187,10 @@ class ToolPluginFrame(customtkinter.CTkFrame):
         if clear_first:
             self.log_text.delete(1.0, tk.END)
         
-        # 如果文本区域不为空，则在新消息前确保有一个换行符
         current_content = self.log_text.get(1.0, tk.END).strip()
-        if current_content: # 如果不为空则添加换行符
+        if current_content:
              self.log_text.insert(tk.END, "\n")
 
-        # <<< 已添加：时间戳前缀
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         formatted_message = f"[{timestamp}] {str(message)}"
 
@@ -214,12 +209,10 @@ class ToolPluginFrame(customtkinter.CTkFrame):
         self.log_message(f"开始分析文件夹: {base_path}", clear_first=True)
         self.start_button.configure(state="disabled", text="分析中...")
         
-        # 清除以前的结果
         for i in self.tree.get_children():
             self.tree.delete(i)
         self.total_size_label_var.set("总大小: 计算中...")
 
-        # <<< 已添加：显示并启动进度条
         self.progress_bar.pack(pady=(5,5), fill='x', padx=10)
         self.progress_bar.start()
 
@@ -257,10 +250,8 @@ class ToolPluginFrame(customtkinter.CTkFrame):
             if not subfolders_data and not overall_errors:
                  self.log_message("未找到子文件夹，或无法访问。")
             
-            # Populate Treeview
             for item in subfolders_data:
                 name, size_bytes, readable_size, status = item
-                # Ensure readable_size is not None for display
                 display_readable_size = readable_size if readable_size is not None else "N/A"
                 display_size_bytes = size_bytes if size_bytes is not None else "N/A"
                 self.tree.insert("", tk.END, values=(name, display_size_bytes, display_readable_size, status))
@@ -274,38 +265,30 @@ class ToolPluginFrame(customtkinter.CTkFrame):
             self.log_message(traceback.format_exc(), is_error=True)
         finally:
             self.start_button.configure(state="normal", text="开始分析")
-            # <<< ADDED: Stop and hide progress bar
             self.progress_bar.stop()
             self.progress_bar.pack_forget()
 
 if __name__ == '__main__':
-    # Example usage (for testing this frame directly)
     try:
         from DUMMY_CUSTOMTKINTER_APP_FOR_TESTING import run_test_app
     except ImportError:
-        # Fallback if the dummy app is not available
-        # Create a simple CTk app for testing
+        
         class SimpleTestApp(customtkinter.CTk):
             def __init__(self, tool_frame_class):
                 super().__init__()
                 self.title(f"Test - {tool_frame_class.TOOL_NAME}")
                 self.geometry("800x700")
                 
-                # Ensure the theme is loaded if not already
-                customtkinter.set_appearance_mode("System") # or "Dark" or "Light"
-                customtkinter.set_default_color_theme("blue") # or "green" or "dark-blue"
+                customtkinter.set_appearance_mode("System")
+                customtkinter.set_default_color_theme("blue")
 
                 self.tool_frame = tool_frame_class(self)
                 self.tool_frame.pack(expand=True, fill="both")
 
         app = SimpleTestApp(ToolPluginFrame)
         app.mainloop()
-        sys.exit() # Ensure clean exit
+        sys.exit()
 
-    # If DUMMY_CUSTOMTKINTER_APP_FOR_TESTING is available:
-    # This assumes you have a script like the one provided in previous interactions
-    # to quickly test CTkFrames.
-    # Create a dummy app structure if it doesn't exist for the test.
     if not os.path.exists("DUMMY_CUSTOMTKINTER_APP_FOR_TESTING.py"):
         with open("DUMMY_CUSTOMTKINTER_APP_FOR_TESTING.py", "w", encoding="utf-8") as f:
             f.write("""

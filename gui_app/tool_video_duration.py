@@ -4,7 +4,6 @@ from tkinter import filedialog, messagebox
 import os
 import sys
 
-# Adjust sys.path to allow importing from the parent directory (toolbox)
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -15,9 +14,8 @@ class VideoDurationFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(3, weight=1) # For log textbox
+        self.grid_rowconfigure(3, weight=1)
 
-        # FFprobe path
         ffprobe_frame = ctk.CTkFrame(self)
         ffprobe_frame.grid(row=0, column=0, padx=10, pady=(10,5), sticky="ew")
         ffprobe_frame.grid_columnconfigure(1, weight=1)
@@ -26,7 +24,6 @@ class VideoDurationFrame(ctk.CTkFrame):
         self.ffprobe_entry.grid(row=0, column=1, padx=(0,10), pady=5, sticky="ew")
         self.ffprobe_entry.insert(0, DEFAULT_FFPROBE_PATH) 
 
-        # Folder Selection
         folder_sel_frame = ctk.CTkFrame(self)
         folder_sel_frame.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         folder_sel_frame.grid_columnconfigure(1, weight=1)
@@ -35,10 +32,8 @@ class VideoDurationFrame(ctk.CTkFrame):
         self.folder_entry.grid(row=0, column=1, padx=(0,10), pady=10, sticky="ew")
         ctk.CTkButton(folder_sel_frame, text="浏览", width=80, command=self.browse_folder).grid(row=0, column=2, padx=(0,10), pady=10)
 
-        # Action Button
         ctk.CTkButton(self, text="统计MP4总时长", command=self.calculate_duration_action).grid(row=2, column=0, padx=10, pady=10, sticky="ew")
         
-        # Log Textbox
         self.log_textbox = ctk.CTkTextbox(self, wrap=tk.WORD)
         self.log_textbox.grid(row=3, column=0, padx=10, pady=(0,10), sticky="nsew")
         self.log_textbox.insert("1.0", "请指定ffprobe.exe的正确路径。\n处理日志和结果将显示在此处...\n")
@@ -76,7 +71,6 @@ class VideoDurationFrame(ctk.CTkFrame):
         self.log_textbox.insert("1.0", f"开始统计 '{folder_path}' 中的MP4文件总时长...\n使用ffprobe: '{ffprobe_path}'\n---\n")
         self.update_idletasks()
 
-        # Call the imported logic function from file.file_duration_statistics
         total_seconds, processed_count, log_messages, errors_list = sum_mp4_durations_in_directory(folder_path, ffprobe_path)
 
         for msg in log_messages:
@@ -92,5 +86,5 @@ class VideoDurationFrame(ctk.CTkFrame):
             messagebox.showwarning("完成 (有错误)", final_summary_text)
         elif processed_count > 0:
             messagebox.showinfo("完成", final_summary_text)
-        else: # No errors, no files processed
+        else:
             messagebox.showinfo("完成", final_summary_text) 

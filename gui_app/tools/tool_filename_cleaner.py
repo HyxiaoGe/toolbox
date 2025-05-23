@@ -4,11 +4,10 @@ from tkinter import filedialog, messagebox, scrolledtext
 import sys
 import os
 
-# 为插件结构调整 sys.path
-current_dir = os.path.dirname(os.path.abspath(__file__)) # gui_app/tools 目录
+current_dir = os.path.dirname(os.path.abspath(__file__))
 tools_dir = current_dir
-gui_app_dir = os.path.dirname(tools_dir)                 # gui_app 目录
-project_root = os.path.dirname(gui_app_dir)              # project_root 目录
+gui_app_dir = os.path.dirname(tools_dir)
+project_root = os.path.dirname(gui_app_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
@@ -23,7 +22,6 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1) # 允许日志区域扩展
 
-        # 目录选择框架
         self.dir_frame = ctk.CTkFrame(self)
         self.dir_frame.grid(row=0, column=0, padx=10, pady=(10,5), sticky="ew")
         self.dir_frame.grid_columnconfigure(1, weight=1)
@@ -33,14 +31,12 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.dir_entry.grid(row=0, column=1, padx=(0,10), pady=10, sticky="ew")
         ctk.CTkButton(self.dir_frame, text="浏览", width=80, command=self.browse_directory).grid(row=0, column=2, padx=(0,10), pady=10)
 
-        # 操作按钮
         self.clean_button = ctk.CTkButton(self, text="开始清理选定文件夹中的文件名", command=self.clean_filenames_in_directory)
         self.clean_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
         
-        # 使用 ScrolledText 的日志显示区域
         self.log_text_area = scrolledtext.ScrolledText(self, wrap=tk.WORD, height=15, undo=True, state=tk.DISABLED)
         self.log_text_area.grid(row=2, column=0, padx=10, pady=(0,10), sticky="nsew")
-        self._apply_theme_to_scrolledtext(self.log_text_area) # 应用主题
+        self._apply_theme_to_scrolledtext(self.log_text_area)
 
     def _apply_theme_to_scrolledtext(self, text_widget):
         try:
@@ -68,16 +64,16 @@ class ToolPluginFrame(ctk.CTkFrame):
         if directory_path:
             self.dir_entry.delete(0, tk.END)
             self.dir_entry.insert(0, directory_path)
-            self.log_text_area.configure(state=tk.NORMAL) # 启用编辑
+            self.log_text_area.configure(state=tk.NORMAL)
             self.log_text_area.delete("1.0", tk.END)
-            self.log_text_area.insert(tk.END, f"已选择文件夹: {directory_path}\\n")
-            self.log_text_area.configure(state=tk.DISABLED) # 禁用编辑
+            self.log_text_area.insert(tk.END, f"已选择文件夹: {directory_path}\n")
+            self.log_text_area.configure(state=tk.DISABLED)
 
-    def log_message(self, message, color="black"): # color 参数未被 ScrolledText 直接使用，但可用于未来的增强功能
-        self.log_text_area.configure(state=tk.NORMAL) # 启用编辑
-        self.log_text_area.insert(tk.END, message + "\\n")
-        self.log_text_area.see(tk.END) # 滚动到底部
-        self.log_text_area.configure(state=tk.DISABLED) # 禁用编辑
+    def log_message(self, message, color="black"):
+        self.log_text_area.configure(state=tk.NORMAL)
+        self.log_text_area.insert(tk.END, message + "\n")
+        self.log_text_area.see(tk.END)
+        self.log_text_area.configure(state=tk.DISABLED)
 
     def clean_filenames_in_directory(self):
         directory = self.dir_entry.get()
@@ -85,21 +81,19 @@ class ToolPluginFrame(ctk.CTkFrame):
             messagebox.showerror("错误", "请选择一个有效的文件夹！")
             return
 
-        self.log_text_area.configure(state=tk.NORMAL) # 启用编辑
+        self.log_text_area.configure(state=tk.NORMAL)
         self.log_text_area.delete("1.0", tk.END)
         self.log_message(f"开始清理文件夹 '{directory}' 中的文件名...")
-        self.log_text_area.configure(state=tk.DISABLED) # 禁用编辑
-        self.update_idletasks() # 在长时间操作之前确保 UI 更新
+        self.log_text_area.configure(state=tk.DISABLED)
+        self.update_idletasks()
 
         try:
-            # 使用返回日志和计数的重构函数
             logs, cleaned_count, skipped_count, error_count = file_clean_useless_name.clean_directory_filenames(directory, log_callback=self.log_message)
             
-            # 显示返回计数中的摘要
-            summary_message = f"文件名清理完成。\\n清理成功: {cleaned_count} 个文件。\\n跳过/无需更改: {skipped_count} 个文件。\\n发生错误: {error_count} 个文件。"
+            summary_message = f"文件名清理完成。\n清理成功: {cleaned_count} 个文件。\n跳过/无需更改: {skipped_count} 个文件。\n发生错误: {error_count} 个文件。"
             self.log_message(summary_message)
             if error_count > 0:
-                messagebox.showwarning("完成伴有错误", f"{summary_message}\\n部分文件清理失败，请检查日志。")
+                messagebox.showwarning("完成伴有错误", f"{summary_message}\n部分文件清理失败，请检查日志。")
             else:
                 messagebox.showinfo("完成", summary_message)
         except Exception as e:

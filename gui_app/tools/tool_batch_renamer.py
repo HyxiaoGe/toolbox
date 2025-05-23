@@ -3,11 +3,8 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 import sys
 import os
-import re # 如果需要，用于模式验证，或用于重命名逻辑
+import re
 
-# 调整 sys.path 以包含项目根目录，以便导入后端模块
-# __file__ 是 gui_app/tools/tool_batch_renamer.py
-# project_root 应该是 gui_app 的父目录
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -21,11 +18,8 @@ class ToolPluginFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
-        # 第6行 (log_text_area) 应该是主要扩展的行
         self.grid_rowconfigure(6, weight=1) 
 
-        # --- UI 元素 ---
-        # 目录选择
         dir_frame = ctk.CTkFrame(self)
         dir_frame.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="ew")
         dir_frame.grid_columnconfigure(1, weight=1)
@@ -34,23 +28,20 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.dir_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         ctk.CTkButton(dir_frame, text="浏览", width=70, command=self.browse_directory).grid(row=0, column=2, padx=5, pady=5)
 
-        # 重命名选项框架
         options_frame = ctk.CTkFrame(self)
         options_frame.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         options_frame.grid_columnconfigure(1, weight=1)
-        # options_frame.grid_columnconfigure(3, weight=1) # 目前仅有效使用2列用于模式
 
         ctk.CTkLabel(options_frame, text="原文件名匹配 (可选):").grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.match_pattern_entry = ctk.CTkEntry(options_frame, placeholder_text="例如: *.jpg (glob) 或 data_(\\d+).txt (正则)")
-        self.match_pattern_entry.grid(row=0, column=1, columnspan=3, padx=5, pady=5, sticky="ew") # 如果稍后添加更多列，则允许其跨越
+        self.match_pattern_entry.grid(row=0, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
 
         ctk.CTkLabel(options_frame, text="新文件名模板:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.rename_pattern_entry = ctk.CTkEntry(options_frame, placeholder_text="例: img_{{num}}.{{ext}} 或 {{group1}}_{{name}}_{{date}}")
         self.rename_pattern_entry.grid(row=1, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
         ctk.CTkLabel(options_frame, text="占位符: {{num}}, {{name}}, {{ext}}, {{groupN}}, {{date}}, {{datetime}}", wraplength=self.winfo_width() - 40 if self.winfo_width() > 50 else 500, justify="left").grid(row=2, column=0, columnspan=4, padx=5, pady=(0,5), sticky="w")
 
-        # 编号框架（在 options_frame 内或单独）
-        num_frame = ctk.CTkFrame(options_frame) # 嵌套以便更好地控制布局
+        num_frame = ctk.CTkFrame(options_frame)
         num_frame.grid(row=3, column=0, columnspan=4, padx=0, pady=0, sticky="ew")
         num_frame.grid_columnconfigure(1, weight=1)
         num_frame.grid_columnconfigure(3, weight=1)
@@ -65,7 +56,6 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.step_num_entry.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
         self.step_num_entry.insert(0, "1")
 
-        # 操作按钮
         action_frame = ctk.CTkFrame(self)
         action_frame.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
         action_frame.grid_columnconfigure(0, weight=1)
@@ -75,7 +65,6 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.rename_button = ctk.CTkButton(action_frame, text="执行重命名", command=self.execute_rename, state=tk.DISABLED)
         self.rename_button.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        # 预览区域 (Treeview)
         preview_label = ctk.CTkLabel(self, text="预览 (最多显示前100项):")
         preview_label.grid(row=3, column=0, padx=10, pady=(5,0), sticky="w")
         
@@ -83,7 +72,7 @@ class ToolPluginFrame(ctk.CTkFrame):
         tree_frame.grid(row=4, column=0, padx=10, pady=5, sticky="nsew")
         tree_frame.grid_columnconfigure(0, weight=1)
         tree_frame.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(4, weight=1) # 使 Treeview 区域垂直扩展
+        self.grid_rowconfigure(4, weight=1)
 
         self.preview_tree = ttk.Treeview(tree_frame, columns=("Original", "New"), show="headings", height=5)
         self.preview_tree.heading("Original", text="原文件名")
@@ -100,30 +89,25 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.preview_tree.configure(xscrollcommand=tree_scrollbar_x.set)
         tree_scrollbar_x.grid(row=1, column=0, sticky="ew")
 
-        # 日志显示区域
         log_label = ctk.CTkLabel(self, text="日志:")
-        log_label.grid(row=5, column=0, columnspan=2, padx=10, pady=(5,0), sticky="w") # 如果滚动条在外部，则列跨度为2
+        log_label.grid(row=5, column=0, columnspan=2, padx=10, pady=(5,0), sticky="w")
         self.log_text_area = scrolledtext.ScrolledText(self, wrap=tk.WORD, height=6, undo=True, state=tk.DISABLED)
         self.log_text_area.grid(row=6, column=0, columnspan=2, padx=10, pady=(0,10), sticky="nsew")
-        # self.grid_rowconfigure(6, weight=1) # 已在 __init__ 顶部设置
+        self.grid_rowconfigure(6, weight=1)
         self._apply_theme_to_scrolledtext(self.log_text_area)
 
-        self.rename_plan = None # 用于存储预览中的计划
-        self.bind("<Configure>", self._on_configure) # 用于更新 wraplength
+        self.rename_plan = None
+        self.bind("<Configure>", self._on_configure)
 
     def _on_configure(self, event=None):
-        # 更新占位符标签的 wraplength
-        # 找到标签 - 它是 options_frame 的子元素
         options_frame = self.grid_slaves(row=1, column=0)[0]
         placeholder_label = options_frame.grid_slaves(row=2, column=0)[0]
-        new_width = options_frame.winfo_width() - 20 # 减去一些内边距
+        new_width = options_frame.winfo_width() - 20
         if new_width > 20:
             placeholder_label.configure(wraplength=new_width)
 
     def _apply_theme_to_scrolledtext(self, text_widget):
         try:
-            # 尝试从 CustomTkinter 的 ThemeManager 获取主题颜色
-            # 此处假设 ThemeManager 的结构；如果 CTk 主题更改，可能需要调整
             is_dark = ctk.get_appearance_mode().lower() == "dark"
             bg_color = ctk.ThemeManager.theme["CTkTextbox"]["fg_color"]
             text_color = ctk.ThemeManager.theme["CTkTextbox"]["text_color"]
@@ -141,16 +125,14 @@ class ToolPluginFrame(ctk.CTkFrame):
                 font=("Segoe UI", ctk.ThemeManager.theme["CTkFont"]["size"]) if "CTkFont" in ctk.ThemeManager.theme else ("Arial", 12),
                 relief=tk.FLAT, 
                 borderwidth=border_width,
-                highlightbackground=current_border, # 用于焦点边框
+                highlightbackground=current_border,
                 highlightcolor=current_border,
                 highlightthickness=border_width,
                 padx=5, pady=5
             )
         except Exception as e:
-            # 如果主题设置失败（例如 ThemeManager 结构已更改），则使用回退方案
-            # print(f"向 ScrolledText 应用主题时出错: {e}")
-            text_widget.config(font=("Arial", 11), relief=tk.SOLID, borderwidth=1) # 基本回退
-            pass # 对用户保持静默
+            text_widget.config(font=("Arial", 11), relief=tk.SOLID, borderwidth=1)
+            pass
 
     def browse_directory(self):
         directory = filedialog.askdirectory(title="选择文件夹")
@@ -241,30 +223,19 @@ class ToolPluginFrame(ctk.CTkFrame):
 
         self.log_message("开始执行重命名操作...")
         self.rename_button.configure(state=tk.DISABLED, text="正在重命名...")
-        self.preview_button.configure(state=tk.DISABLED) # 执行期间禁用预览
+        self.preview_button.configure(state=tk.DISABLED)
         self.update_idletasks()
 
         try:
-            # 将 self.log_message 作为回调传递给后端
             success, summary_message, detailed_logs = file_rename.execute_rename_plan(
                 self.rename_plan, 
                 log_callback=lambda msg: self.log_message(f"[执行] {msg}") 
             )
             
-            # The backend now returns all logs, including those from the callback.
-            # So, we might not need to iterate `detailed_logs` if `log_message` was called for each.
-            # However, the final summary_message is important.
-            # Let's clear and re-log if the backend provides a full log list for clarity.
-            # For now, the lambda above prefixes [执行] to backend logs.
-            # The final summary message will be logged without the prefix below.
-
-            self.log_message(f"执行完毕。最终总结: {summary_message}") # Display final summary from backend
-            
             if success:
                 messagebox.showinfo("完成", summary_message)
             else:
-                # Even if overall success is False (e.g. some errors), summary_message will reflect this.
-                messagebox.showwarning("重命名注意", summary_message) # Use warning if not all successful
+                messagebox.showwarning("重命名注意", summary_message)
 
         except Exception as e:
             self.log_message(f"执行重命名过程中发生意外错误: {e}")
@@ -276,12 +247,9 @@ class ToolPluginFrame(ctk.CTkFrame):
             self.preview_button.configure(state=tk.NORMAL)
 
 if __name__ == '__main__':
-    # 示例用法（用于直接测试此框架）
     try:
         from DUMMY_CUSTOMTKINTER_APP_FOR_TESTING import run_test_app
     except ImportError:
-        # 如果虚拟应用程序不可用，则使用回退
-        # 创建一个简单的 CTk 应用以进行测试
         class SimpleTestApp(ctk.CTk):
             def __init__(self, tool_frame_class):
                 super().__init__()
@@ -297,12 +265,8 @@ if __name__ == '__main__':
 
         app = SimpleTestApp(ToolPluginFrame)
         app.mainloop()
-        sys.exit() # 确保干净退出
+        sys.exit()
 
-    # 如果 DUMMY_CUSTOMTKINTER_APP_FOR_TESTING 可用：
-    # 此处假设你拥有先前交互中提供的那种脚本
-    # 用于快速测试 CTkFrames。
-    # 如果测试用的虚拟应用结构不存在，则创建它。
     if not os.path.exists("DUMMY_CUSTOMTKINTER_APP_FOR_TESTING.py"):
         with open("DUMMY_CUSTOMTKINTER_APP_FOR_TESTING.py", "w", encoding="utf-8") as f:
             f.write("""

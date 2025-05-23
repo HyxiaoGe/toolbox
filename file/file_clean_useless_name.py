@@ -19,21 +19,24 @@ def clean_directory_filenames(directory_path, patterns=None, log_callback=None):
     if patterns is None:
         patterns = PATTERNS_TO_CLEAN
     
-    all_log_messages = [] # 存储所有日志，无论是否使用回调
-    cleaned_count = 0
     processed_count = 0
+    cleaned_count = 0
     error_count = 0
+    logs = []
 
-    def _log(message):
-        all_log_messages.append(message)
+    def _log(msg):
+        logs.append(msg)
         if log_callback:
-            log_callback(message)
+            try:
+                log_callback(msg)
+            except Exception as e:
+                logs.append(f"[Callback Error]: {e}")
 
     if not os.path.isdir(directory_path):
         _log(f"Error: Directory '{directory_path}' not found.")
         # 为了返回签名的一致性，正确计算 skipped_count
         skipped_count = processed_count - cleaned_count - error_count 
-        return all_log_messages, cleaned_count, skipped_count, error_count
+        return logs, cleaned_count, skipped_count, error_count
 
     for root, _, files in os.walk(directory_path):
         for filename in files:
@@ -44,16 +47,14 @@ def clean_directory_filenames(directory_path, patterns=None, log_callback=None):
             for pattern in patterns:
                 current_filename_state = re.sub(pattern, '', current_filename_state)
             
-            current_filename_state = current_filename_state.strip() # Remove leading/trailing whitespace
+            current_filename_state = current_filename_state.strip()
 
-            if current_filename_state != original_filename and current_filename_state: # 确保不为空
+            if current_filename_state != original_filename and current_filename_state:
                 original_path = os.path.join(root, original_filename)
                 new_path = os.path.join(root, current_filename_state)
                 try:
                     if os.path.exists(new_path) and original_path.lower() != new_path.lower():
                         _log(f'SKIP: Target "{current_filename_state}" already exists in "{root}". Cannot rename "{original_filename}".')
-                        # 这种情况不是操作失败意义上的错误，而是故意的跳过。
-                        # error_count 应反映实际的异常或严重问题。
                     else:
                         os.rename(original_path, new_path)
                         _log(f'RENAMED: "{original_filename}" to "{current_filename_state}" in "{root}".')
@@ -76,7 +77,7 @@ def clean_directory_filenames(directory_path, patterns=None, log_callback=None):
     skipped_count = processed_count - cleaned_count - error_count
     if skipped_count < 0: skipped_count = 0 # 确保为非负数，尽管逻辑上不应如此。
 
-    return all_log_messages, cleaned_count, skipped_count, error_count
+    return logs, cleaned_count, skipped_count, error_count
 
 
 if __name__ == '__main__':
@@ -96,4 +97,4 @@ if __name__ == '__main__':
     # for log_entry in logs:
     #     print(log_entry)
     
-    print(f"\\nSummary from return values: Cleaned {cleaned}, Skipped/No Change {skipped}, Errors/Warnings {errors_list}")
+    print(f"\nSummary from return values: Cleaned {cleaned}, Skipped/No Change {skipped}, Errors/Warnings {errors_list}")

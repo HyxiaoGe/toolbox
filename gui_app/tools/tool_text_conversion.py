@@ -5,15 +5,11 @@ import sys
 import os
 from opencc import OpenCC
 
-# 正确设置 sys.path 以便从项目根目录中的 'opencc_python' 包导入
-# 假设此文件位于 gui_app/tools/
 current_dir = os.path.dirname(os.path.abspath(__file__))
-gui_app_dir = os.path.dirname(current_dir) # gui_app 目录
-project_root = os.path.dirname(gui_app_dir) # project_root 目录
+gui_app_dir = os.path.dirname(current_dir)
+project_root = os.path.dirname(gui_app_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
-
-# 由于UI现在基于文本，已移除未使用的 convert_traditional_to_simplified_logic 函数
 
 class ToolPluginFrame(ctk.CTkFrame):
     TOOL_NAME = "文本繁简转换"
@@ -22,7 +18,7 @@ class ToolPluginFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1) # 允许 TabView 扩展
+        self.grid_rowconfigure(0, weight=1)
 
         self.tab_view = ctk.CTkTabview(self, segmented_button_selected_hover_color=ctk.ThemeManager.theme["CTkSegmentedButton"]["selected_hover_color"])
         self.tab_view.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
@@ -33,10 +29,8 @@ class ToolPluginFrame(ctk.CTkFrame):
         self._create_text_conversion_tab(self.tab_text)
         self._create_file_conversion_tab(self.tab_file)
 
-        # 默认情况下为文本选项卡初始化 OpenCC
         self.text_openCC = OpenCC('t2s') 
-        # 文件选项卡将根据其自己的单选按钮初始化其 OpenCC 实例
-        self.file_openCC = None # 稍后初始化
+        self.file_openCC = None
 
     def _create_text_conversion_tab(self, tab):
         tab.grid_columnconfigure(0, weight=1)
@@ -64,10 +58,8 @@ class ToolPluginFrame(ctk.CTkFrame):
 
     def _create_file_conversion_tab(self, tab):
         tab.grid_columnconfigure(0, weight=1)
-        # 根据需要配置行，例如用于输入、输出、控件、状态
-        tab.grid_rowconfigure(3, weight=1) # 如果添加了状态或日志区域，则用于该区域
+        tab.grid_rowconfigure(3, weight=1)
 
-        # 文件转换模式
         mode_frame = ctk.CTkFrame(tab)
         mode_frame.grid(row=0, column=0, padx=10, pady=(10,5), sticky="ew")
         ctk.CTkLabel(mode_frame, text="转换模式:").grid(row=0, column=0, padx=(10,0), pady=5, sticky="w")
@@ -78,7 +70,6 @@ class ToolPluginFrame(ctk.CTkFrame):
         file_radio_s2t.grid(row=0, column=2, padx=5, pady=5, sticky="w")
         self._update_file_converter() # 初始化 self.file_openCC
 
-        # 输入文件选择
         input_file_frame = ctk.CTkFrame(tab)
         input_file_frame.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         input_file_frame.grid_columnconfigure(1, weight=1)
@@ -87,7 +78,6 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.input_file_entry.grid(row=0, column=1, padx=(0,10), pady=10, sticky="ew")
         ctk.CTkButton(input_file_frame, text="浏览", width=80, command=self._browse_input_file).grid(row=0, column=2, padx=(0,10), pady=10)
 
-        # 操作按钮
         ctk.CTkButton(tab, text="转换文件并另存为...", command=self._convert_file_logic).grid(row=2, column=0, padx=10, pady=10, sticky="ew")
         
         # 状态标签
@@ -182,7 +172,7 @@ class ToolPluginFrame(ctk.CTkFrame):
             with open(input_path, 'r', encoding='utf-8') as f_in, \
                  open(output_path, 'w', encoding='utf-8') as f_out:
                 input_text = f_in.read()
-                if self.file_openCC is None: # 应由 _update_file_converter 或在选项卡创建时初始化
+                if self.file_openCC is None:
                     self._update_file_converter()
                 converted_text = self.file_openCC.convert(input_text)
                 f_out.write(converted_text)
@@ -190,7 +180,7 @@ class ToolPluginFrame(ctk.CTkFrame):
             success_message = f"文件已成功转换为 {current_mode} 并保存至:\\n{output_path}"
             self.file_status_label.configure(text=success_message, text_color="green")
             messagebox.showinfo("成功", success_message)
-        except FileNotFoundError: # 应由先前的检查捕获，但作为安全措施
+        except FileNotFoundError:
             message = f"错误: 输入文件未找到 {input_path}"
             self.file_status_label.configure(text=message, text_color="red")
             messagebox.showerror("文件错误", message)
@@ -199,4 +189,3 @@ class ToolPluginFrame(ctk.CTkFrame):
             self.file_status_label.configure(text=message, text_color="red")
             messagebox.showerror("转换失败", message)
 
-# 已移除 browse_input_file 和 convert_file 方法及相关的UI元素 (input_file_entry, status_label) 

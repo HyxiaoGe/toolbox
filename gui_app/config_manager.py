@@ -13,12 +13,10 @@ def _get_config_file_path():
             os.makedirs(config_dir)
         except OSError as e:
             print(f"警告: 无法创建配置目录 {config_dir}: {e}")
-            # 如果用户主目录不可写，则回退到当前工作目录
-            # 这对于已安装的应用来说不是理想情况，但可能适用于开发环境。
             print(f"将尝试在当前工作目录下创建配置文件。")
             config_dir = os.path.join(os.getcwd(), CONFIG_DIR_NAME)
             if not os.path.exists(config_dir):
-                 os.makedirs(config_dir, exist_ok=True) # exist_ok 用于回退路径创建
+                os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, CONFIG_FILE_NAME)
 
 CONFIG_FILE_PATH = _get_config_file_path()
@@ -37,7 +35,6 @@ def load_config():
 def save_config(config_data):
     """将配置数据保存到JSON文件。"""
     try:
-        # 确保目录存在，特别是当使用了回退路径且初始未创建时
         config_dir = os.path.dirname(CONFIG_FILE_PATH)
         if not os.path.exists(config_dir):
             os.makedirs(config_dir, exist_ok=True)
@@ -61,15 +58,12 @@ def set_setting(tool_name, setting_key, value):
     save_config(config)
 
 if __name__ == '__main__':
-    # 一些简单的测试
     print(f"配置文件路径: {CONFIG_FILE_PATH}")
 
-    # 测试设置
     set_setting("TestTool", "username", "test_user")
     set_setting("TestTool", "theme", "dark")
     set_setting("AnotherTool", "last_path", "/some/path")
 
-    # 测试获取
     username = get_setting("TestTool", "username")
     print(f"TestTool username: {username}")
 
@@ -87,14 +81,3 @@ if __name__ == '__main__':
 
     config_after_sets = load_config()
     print(f"完整配置内容:\n{json.dumps(config_after_sets, indent=4, ensure_ascii=False)}")
-
-    # 清理测试 (可选)
-    # set_setting("TestTool", "username", None) # 用于移除
-    # set_setting("TestTool", "theme", None)
-    # config = load_config()
-    # if "TestTool" in config and not config["TestTool"]:
-    #     del config["TestTool"]
-    # if "AnotherTool" in config: # 假设我们想要移除它
-    #     del config["AnotherTool"]
-    # save_config(config)
-    # print("清理后的配置:", load_config()) 

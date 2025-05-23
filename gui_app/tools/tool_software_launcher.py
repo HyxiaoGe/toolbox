@@ -3,27 +3,17 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
 import sys
-# import json # 此处不再直接使用 json，config_manager 将处理它
 
-# 调整 sys.path 以包含项目根目录
-project_root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)) # 已针对新结构进行调整
+project_root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 if project_root_dir not in sys.path:
     sys.path.insert(0, project_root_dir)
 
-from gui_app.config_manager import get_setting, set_setting # 使用我们的配置管理器
+from gui_app.config_manager import get_setting, set_setting
 
-# from software.software_quickstart import ( # 暂时移除，首先进行直接启动
-#     load_software_config as qs_load_config,
-#     launch_program as qs_launch_program,
-#     execute_custom_action as qs_execute_action
-# )
-import subprocess # 用于初始的直接启动
+import subprocess
 
-# CONFIG_FILE_NAME = "software_config.json" # 已移除
-# EXAMPLE_DOC_NAME = "dummy_document_for_quickstart.txt" # 已移除
-
-TOOL_CONFIG_NAME = "SoftwareLauncherTool" # 此工具设置的唯一名称
-CONFIG_KEY_SHORTCUTS = "shortcuts_list" # 此工具设置中快捷方式列表的键
+TOOL_CONFIG_NAME = "SoftwareLauncherTool"
+CONFIG_KEY_SHORTCUTS = "shortcuts_list"
 
 
 class ToolPluginFrame(ctk.CTkFrame):
@@ -33,14 +23,11 @@ class ToolPluginFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
-        # 第0行：控件（添加按钮、状态）
-        # 第1行：启动区域 (ScrollableFrame)
         self.grid_rowconfigure(1, weight=1) 
 
-        # --- 顶部控制框架 ---
         control_frame = ctk.CTkFrame(self)
         control_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-        control_frame.grid_columnconfigure(1, weight=1) # 允许状态标签扩展
+        control_frame.grid_columnconfigure(1, weight=1)
 
         self.add_shortcut_button = ctk.CTkButton(control_frame, text="添加快捷方式", command=self._add_shortcut_dialog)
         self.add_shortcut_button.grid(row=0, column=0, padx=(0,10), pady=5, sticky="w")
@@ -48,21 +35,16 @@ class ToolPluginFrame(ctk.CTkFrame):
         self.status_var = tk.StringVar(value="点击 '添加快捷方式' 来创建新的启动项.")
         self.status_label = ctk.CTkLabel(control_frame, textvariable=self.status_var, wraplength=600)
         self.status_label.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        # self.status_label.bind("<Configure>", self._on_status_label_configure) # 暂时移除
 
-        # --- 启动区域 ---
         self.launch_area = ctk.CTkScrollableFrame(self, label_text="已保存的快捷方式")
         self.launch_area.grid(row=1, column=0, padx=10, pady=(0,10), sticky="nsew")
-        # 列配置将在 _populate_shortcuts_ui 内部设置
 
-        self.shortcuts = [] # 这将保存字典列表：{"name": str, "path": str}
+
+        self.shortcuts = []
         
         self._load_and_display_shortcuts()
 
-    # def _on_status_label_configure(self, event): # 已移除
-    #     pass
-
-    def _log_status(self, message, is_error=False): # 已重命名并简化
+    def _log_status(self, message, is_error=False):
         prefix = "错误: " if is_error else ""
         self.status_var.set(f"{prefix}{message}")
         if is_error:
@@ -80,14 +62,13 @@ class ToolPluginFrame(ctk.CTkFrame):
         
         if not self.shortcuts:
             self._log_status("还没有任何快捷方式。请添加一个。")
-            # 可选地，在 launch_area 中显示一个标签
             no_items_label = ctk.CTkLabel(self.launch_area, text="没有已保存的快捷方式。")
             no_items_label.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
             return
 
-        self.launch_area.grid_columnconfigure(0, weight=0) # 名称标签
-        self.launch_area.grid_columnconfigure(1, weight=1) # 启动按钮 (可拉伸)
-        self.launch_area.grid_columnconfigure(2, weight=0) # 删除按钮
+        self.launch_area.grid_columnconfigure(0, weight=0)
+        self.launch_area.grid_columnconfigure(1, weight=1)
+        self.launch_area.grid_columnconfigure(2, weight=0)
         
         for i, item in enumerate(self.shortcuts):
             name = item.get("name", "未知快捷方式")
@@ -108,9 +89,6 @@ class ToolPluginFrame(ctk.CTkFrame):
         self._log_status(f"已加载 {len(self.shortcuts)} 个快捷方式。")
 
     def _add_shortcut_dialog(self):
-        # 实现添加新快捷方式的功能
-        # 这将涉及 filedialog.askopenfilename 和 ctk.CTkInputDialog
-        # 然后调用 _save_shortcuts_and_refresh_ui
         exe_path = filedialog.askopenfilename(
             title="选择可执行文件 (.exe)",
             filetypes=(("可执行文件", "*.exe"), ("所有文件", "*.*"))
@@ -129,7 +107,6 @@ class ToolPluginFrame(ctk.CTkFrame):
             self._log_status("添加已取消：未提供名称。")
             return
             
-        # 检查重复的名称或路径（可选，有助于用户体验）
         for s in self.shortcuts:
             if s["name"] == shortcut_name:
                 messagebox.showerror("错误", f"名称 '{shortcut_name}' 已存在。")
@@ -164,36 +141,12 @@ class ToolPluginFrame(ctk.CTkFrame):
             return
 
         try:
-            # 对于 Windows，使用 startfile 可能更适合 .exe 以处理工作目录
-            # 或允许更自然的执行。subprocess.Popen 更具跨平台性。
             if sys.platform == "win32":
-                os.startfile(exe_path) # 在 Windows 上更"自然"的启动
+                os.startfile(exe_path)
             else:
-                subprocess.Popen([exe_path]) # 基本的跨平台 Popen
+                subprocess.Popen([exe_path])
             
             self._log_status(f"已成功发出启动 '{item_name}' 的指令。")
         except Exception as e:
             self._log_status(f"启动 '{item_name}' ({exe_path}) 失败: {e}", is_error=True)
-            messagebox.showerror("启动错误", f"启动 {item_name} 时发生错误:\\n{e}")
-
-# 暂时保留旧的 launch_software_item 及其依赖项 (qs_launch_program, qs_execute_action)
-# 以便以后需要合并/引用其部分内容时使用，
-# 但新的简化 UI 并未直接使用它们。
-# 新的 _launch_item 更简单。
-# 如果用户希望保留 "actions" 和 "args"，则添加对话框和项目结构需要更复杂。
-
-# ... (原始的 load_config_and_populate_ui 和 launch_software_item 可能会在此处，以供参考)
-# ... (但它们在很大程度上已被上述新方法替换或简化)
-
-# 示例：(原始函数定义供参考，将在新版本中移除/不使用)
-# def original_load_config_and_populate_ui(self): ...
-# def original_launch_software_item(self, software_item): ...
-# 这些现在分别被 _load_and_display_shortcuts 和 _launch_item 取代。
-
-# ... (原始的 load_config_and_populate_ui 和 launch_software_item 可能会在此处，以供参考)
-# ... (但它们在很大程度上已被上述新方法替换或简化)
-
-# 示例：(原始函数定义供参考，将在新版本中移除/不使用)
-# def original_load_config_and_populate_ui(self): ...
-# def original_launch_software_item(self, software_item): ...
-# These are now superseded by _load_and_display_shortcuts and _launch_item respectively. 
+            messagebox.showerror("启动错误", f"启动 {item_name} 时发生错误:\n{e}")
